@@ -6,7 +6,6 @@ import { BrandMark } from "../icons.jsx";
 
 export default function Login() {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [jellyfinEnabled, setJellyfinEnabled] = useState(false);
@@ -28,6 +27,7 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const password = new FormData(e.currentTarget).get("password");
     setError(null);
     setLoading(true);
     try {
@@ -70,7 +70,7 @@ export default function Login() {
         </div>
         <div className="field">
           <label htmlFor="login-password">Password</label>
-          <input id="login-password" autoComplete="current-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input id="login-password" autoComplete="current-password" name="password" type="password" required />
         </div>
 
         <button type="submit" className="btn btn-primary ct-auth-submit" disabled={loading}>

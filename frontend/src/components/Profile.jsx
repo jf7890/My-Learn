@@ -1,3 +1,4 @@
+import PasswordSettings from "./PasswordSettings.jsx";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
@@ -54,6 +55,7 @@ export default function Profile() {
         </div>
       </div>
 
+      <PasswordSettings />
       <style>{`
         .ct-profile { max-width: 640px; margin: 0 auto; padding: var(--space-6) var(--space-5); }
         .ct-profile-back { display:inline-flex;align-items:center;gap:3px;color:var(--text-muted);text-decoration:none;font-size:var(--text-sm);margin-bottom:var(--space-5); }

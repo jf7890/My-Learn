@@ -2,7 +2,7 @@
 
 import os
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 import auth
 import mailer
@@ -11,7 +11,7 @@ from auth import (authenticate_local, authenticate_with_jellyfin,
                   get_or_create_jellyfin_linked_user, hash_password,
                   issue_token, jellyfin_settings)
 from db import any_users_exist, get_conn, get_setting, row_to_dict
-from schemas import ForgotPasswordRequest, LoginRequest, SetPasswordRequest, SetupRequest
+from schemas import ChangePasswordRequest, ForgotPasswordRequest, LoginRequest, SetPasswordRequest, SetupRequest
 
 router = APIRouter()
 SESSION_COOKIE = "session_token"
@@ -175,3 +175,27 @@ def set_password_via_token(token: str, body: SetPasswordRequest, response: Respo
         auth.consume_auth_token(conn, token)
         user = conn.execute("SELECT id,username,is_admin FROM users WHERE id=?", (resolved["user_id"],)).fetchone()
     return auth_response(response, dict(user))
+
+
+@router.post("/auth/change-password")
+def change_password(body: ChangePasswordRequest, response: Response, current=Depends(auth.get_current_user)):
+    key = f"change-password:{current['sub']}"
+    rate_limit.check_rate_limit(key)
+    if body.new_password != body.confirm_password:
+        raise HTTPException(400, "New passwords do not match")
+    if not 12 <= len(body.new_password) or len(body.new_password.encode()) > 72:
+        raise HTTPException(400, "Use at least 12 characters and at most 72 UTF-8 bytes")
+    if len(body.old_password.encode()) > 72:
+        raise HTTPException(400, "Old password is invalid")
+    with get_conn() as conn:
+        user = conn.execute("SELECT * FROM users WHERE id=?", (current['sub'],)).fetchone()
+        if not user or not auth.verify_password(body.old_password, user['password_hash']):
+            rate_limit.record_failure(key)
+            raise HTTPException(400, "Old password is incorrect or local password is not configured")
+        if body.old_password == body.new_password:
+            raise HTTPException(400, "Choose a different new password")
+        conn.execute("UPDATE users SET password_hash=? WHERE id=?", (hash_password(body.new_password), current['sub']))
+        conn.execute("UPDATE auth_tokens SET used=1 WHERE user_id=?", (current['sub'],))
+    rate_limit.record_success(key)
+    response.headers['Cache-Control'] = 'no-store'
+    return {"ok": True}

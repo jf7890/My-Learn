@@ -1,12 +1,13 @@
 """Administrative users, settings, notifications, backup, and library routes."""
 import io
+import secrets
 import os
 import sqlite3
 import tempfile
 import zipfile
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 
 import auth
@@ -96,13 +97,20 @@ def delete_user(user_id: int, current=Depends(require_admin)):
     return {"ok": True}
 
 @router.post("/admin/users/{user_id}/reset-password")
-def reset_password(user_id: int, body: ResetPasswordRequest, current=Depends(require_admin)):
-    if len(body.password) < 8:
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+def reset_password(user_id: int, body: ResetPasswordRequest, response: Response, current=Depends(require_admin)):
+    password = secrets.token_urlsafe(18) if body.password is None else body.password
+    if len(password) < 12 or len(password.encode()) > 72:
+        raise HTTPException(400, "Use at least 12 characters and at most 72 UTF-8 bytes")
     with get_conn() as conn:
-        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(body.password), user_id))
-    return {"ok": True}
-
+        user = conn.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone()
+        if not user:
+            raise HTTPException(404, "User not found")
+        if str(user_id) == str(current['sub']):
+            raise HTTPException(400, "Use My progress to change your own password with your old password")
+        conn.execute("UPDATE users SET password_hash=? WHERE id=?", (hash_password(password), user_id))
+        conn.execute("UPDATE auth_tokens SET used=1 WHERE user_id=?", (user_id,))
+    response.headers['Cache-Control'] = 'no-store'
+    return {"ok": True, "generated_password": password if body.password is None else None}
 
 @router.get("/admin/users/{user_id}/course-access")
 def get_user_course_access(user_id: int, current=Depends(require_admin)):

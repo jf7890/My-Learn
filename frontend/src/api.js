@@ -85,6 +85,7 @@ export const api = {
   createUser: (username, password, isAdmin, email = "", sendInvite = false) =>
     request("/admin/users", { method: "POST", body: JSON.stringify({ username, password, is_admin: isAdmin, email, send_invite: sendInvite }) }),
   deleteUser: (id) => request(`/admin/users/${id}`, { method: "DELETE" }),
+  changePassword: (body) => request("/auth/change-password", {method: "POST", body: JSON.stringify(body)}),
   resetPassword: (id, password) =>
     request(`/admin/users/${id}/reset-password`, { method: "POST", body: JSON.stringify({ password }) }),
   getUserCourseAccess: (id) => request(`/admin/users/${id}/course-access`),

@@ -1,3 +1,4 @@
+import PasswordSettings from "./PasswordSettings.jsx";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
@@ -106,6 +107,7 @@ export default function AdminDashboard() {
 }
 
 function MembersPanel() {
+  const [resetUser, setResetUser] = useState(null);
   const [users, setUsers] = useState(null);
   const [smtpEnabled, setSmtpEnabled] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -171,6 +173,7 @@ function MembersPanel() {
                 <td className="ct-muted-cell">{u.jellyfin_user_id ? "Jellyfin" : "Local"}</td>
                 <td className="ct-muted-cell">{formatLastLogin(u.last_login_at)}</td>
                 <td className="ct-table-actions">
+                  <button className="btn btn-secondary btn-sm" onClick={() => setResetUser(u)}>Reset password</button>
                   {!u.is_admin && <button className="btn btn-secondary btn-sm" onClick={() => setAccessUser(u)}>Course access</button>}
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>Remove</button>
                 </td>
@@ -180,6 +183,7 @@ function MembersPanel() {
         </table>
       </div>
 
+      {resetUser && <PasswordSettings user={resetUser} onClose={() => setResetUser(null)} />}
       {accessUser && <CourseAccessEditor user={accessUser} onClose={() => setAccessUser(null)} />}
 
       {!showCreate ? (

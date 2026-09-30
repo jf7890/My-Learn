@@ -57,7 +57,7 @@ class CreateMemberRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
-    password: str
+    password: str | None = None
 
 
 class CourseAccessUpdate(BaseModel):
@@ -105,3 +105,8 @@ class CourseUpdate(BaseModel):
     tags: str = ""
     is_featured: bool = False
     is_hidden: bool = False
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str
