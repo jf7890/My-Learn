@@ -10,3 +10,22 @@ body .sl-login-screen{background:var(--bg)}body .sl-login-story h2{color:var(--t
 @keyframes flame-arrive{0%{transform:scale(.6) rotate(-12deg)}65%{transform:scale(1.15) rotate(5deg)}100%{transform:scale(1)}}
 @media(max-width:900px){.learning-mood{margin:0;display:flex;align-items:center;gap:8px}.learning-streak{padding:7px}.learning-streak small{display:none}.learning-streak svg{width:24px;height:28px}}
 @media(prefers-reduced-motion:reduce){.learning-streak.is-lit svg{animation:none}}
+
+/* Soft appearance: sky-blue navigation and warm ivory workspace. */
+:root,[data-theme="soft"]{--bg:#f0eee5;--surface:#faf8f0;--surface-raised:#e9edf0;--surface-overlay:#dfe8ec;--border:#cbd0ce;--border-strong:#89999e;--text:#273d4a;--text-muted:#536773;--text-faint:#62727c;--nav-bg:#dcecf6;--accent:#385e9d;--accent-dim:#6b89b5;--accent-soft:#477db518;--hero-bg:#e9e6d6;--hero-text:#354351;--hero-sub:#586572;--hero-line:#c9c6b6;--button-text:#fff;}
+html[data-theme="dark"]{--bg:#202936;--surface:#2a3546;--surface-raised:#354359;--surface-overlay:#40516a;--border:#53627a;--border-strong:#8494ac;--text:#eef1fa;--text-muted:#c0cadd;--text-faint:#b0bfd0;--accent:#c6b7ff;--accent-dim:#9b8cc8;--accent-soft:#c6b7ff19;--nav-bg:#273141;--hero-bg:#35483f;--hero-text:#e5f2dc;--hero-sub:#c7dbc1;--hero-line:#6f8976;--button-text:#28203c;}
+body .password-panel{padding:28px;margin-top:24px;max-width:640px;min-width:0;}
+.password-panel>h2{font-size:24px;line-height:1.35;margin:0 0 12px;overflow-wrap:anywhere;}
+.password-panel>p{margin:0 0 24px;color:var(--text-muted);line-height:1.65;}
+.password-form{display:grid;gap:20px;}
+.password-panel .field{display:grid;gap:8px;margin:0;min-width:0;}
+body .password-panel .field label{margin:0;font-size:14px;line-height:1.5;}
+body .password-panel input,body .password-panel select{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;padding:11px 14px;border:1px solid var(--border-strong);border-radius:10px;font:inherit;font-size:15px;line-height:1.5;background:var(--surface-raised);color:var(--text);}
+.password-panel option{font:inherit;background:var(--surface);color:var(--text);}
+.password-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;}
+body .password-actions .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:0;padding:11px 18px;line-height:20px;font-size:14px;box-sizing:border-box;}
+.password-panel .password-status{margin:18px 0 0;}.password-status:empty{display:none;}
+.password-result{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:grid;gap:16px;min-width:0;}
+.password-result p{margin:0;color:var(--text-muted);line-height:1.6;}
+.password-generated{display:block;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface-raised);color:var(--text);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap;user-select:all;}
+@media(max-width:480px){body .password-panel{padding:20px;}.password-actions{gap:10px;}body .password-actions .btn{padding:11px 14px;}}
