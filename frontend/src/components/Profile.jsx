@@ -37,11 +37,6 @@ export default function Profile() {
       <h2 className="ct-profile-heading">{user?.username}</h2>
       {memberSince && <p className="ct-profile-sub">Member since {memberSince}</p>}
 
-      <nav aria-label="Profile sections" style={{display:'flex',gap:12,margin:'24px 0'}}>
-        <button className={`btn ${tab==='overview'?'btn-primary':'btn-secondary'}`} aria-pressed={tab==='overview'} onClick={()=>setTab('overview')}>Overview</button>
-        {!user?.is_admin && <button className={`btn ${tab==='settings'?'btn-primary':'btn-secondary'}`} aria-pressed={tab==='settings'} onClick={()=>setTab('settings')}>Settings</button>}
-        {user?.is_admin && <Link className="btn btn-secondary" to="/admin">Manage account in Admin</Link>}
-      </nav>
       {tab==='overview' && <>
       <div className="ct-stat-grid">
         <div className="card ct-stat-card">
@@ -71,7 +66,6 @@ export default function Profile() {
         {!courseError && courses.filter(c=>c.has_access && c.percent_complete>0).length===0 && <div className="card" style={{padding:24}}><h3>Your next chapter starts here</h3><p>Start a lesson and your learning progress will appear here.</p><Link to="/" className="btn btn-primary">Explore courses</Link></div>}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:16}}>{courses.filter(c=>c.has_access && c.percent_complete>0).map(c=><Link className="card" style={{padding:24,textDecoration:'none'}} key={c.id} to={`/course/${c.id}`}><h3>{c.title}</h3><p>{c.lesson_count} lessons · {c.percent_complete}% complete</p><progress max="100" value={c.percent_complete} aria-label={`${c.title} completion`} style={{width:'100%',accentColor:'var(--accent)'}} /></Link>)}</div>
       </section></>}
-      {tab==='settings' && !user?.is_admin && <section><h2>Account settings</h2><p>Manage the security of your account.</p><PasswordSettings /></section>}
       <style>{`
         .ct-profile { max-width: 640px; margin: 0 auto; padding: var(--space-6) var(--space-5); }
         .ct-profile-back { display:inline-flex;align-items:center;gap:3px;color:var(--text-muted);text-decoration:none;font-size:var(--text-sm);margin-bottom:var(--space-5); }
