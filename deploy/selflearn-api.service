@@ -1,16 +1,16 @@
 [Unit]
-Description=Self Learn FastAPI
+Description=My Learn FastAPI
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/root/Self-Learn
-EnvironmentFile=/root/Self-Learn/.env
-Environment=ULEARN_DB=/root/Self-Learn/data/ulearn.db
-Environment=COURSES_ROOT=/root/Self-Learn/courses
-ExecStart=/root/Self-Learn/.venv/bin/uvicorn main:app --app-dir server --host 127.0.0.1 --port 8000
+WorkingDirectory=/root/My-Learn
+EnvironmentFile=/root/My-Learn/.env
+Environment=ULEARN_DB=/root/My-Learn/data/ulearn.db
+Environment=COURSES_ROOT=/root/My-Learn/courses
+ExecStart=/root/My-Learn/.venv/bin/uvicorn main:app --app-dir server --host 127.0.0.1 --port 8000 --no-access-log
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=30
