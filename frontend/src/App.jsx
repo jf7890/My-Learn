@@ -1,3 +1,4 @@
+import LearningMood from "./components/LearningMood.jsx";
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router-dom";
 import Login from "./components/Login.jsx";
 import Setup from "./components/Setup.jsx";
@@ -47,7 +48,7 @@ function TopNav() {
         )}
         <span className="sl-brand-name">{site_name || "Self Learn"}<small>Your learning workspace</small></span>
       </Link>
-      <span className="sl-nav-label">WORKSPACE</span>
+      <LearningMood /><span className="sl-nav-label">WORKSPACE</span>
       <Link to="/" className={`btn btn-secondary btn-sm ${location.pathname === "/" ? "ct-nav-active" : ""}`}><IconLibrary width={18} height={18} /> Library</Link>
       <div className="ct-spacer" />
       <Link to="/profile" className={`btn btn-secondary btn-sm ${location.pathname === "/profile" ? "ct-nav-active" : ""}`}>

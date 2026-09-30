@@ -20,6 +20,11 @@ from contextlib import contextmanager
 DB_PATH = os.environ.get("ULEARN_DB", "/data/ulearn.db")
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS first_video_completions (
+ user_id INTEGER NOT NULL, lesson_id INTEGER NOT NULL, day TEXT,
+ PRIMARY KEY(user_id,lesson_id)
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -201,6 +206,8 @@ def init_db():
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='course_access'"
     ).fetchone() is not None
     conn.executescript(SCHEMA)
+    # Prior completions are ineligible for new streak credit; their original dates are unknown.
+    conn.execute("INSERT OR IGNORE INTO first_video_completions(user_id,lesson_id,day) SELECT p.user_id,p.lesson_id,NULL FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.completed=1 AND l.media_type='video'")
     _migrate(conn)
     if not had_course_access:
         conn.execute(
