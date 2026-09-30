@@ -5,10 +5,12 @@ export default function PasswordSettings({user, onClose}) {
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
   const [generated,setGenerated]=useState('');
+  const [visible,setVisible]=useState(false);
+  const [copyStatus,setCopyStatus]=useState('');
   const prefix=user ? `reset-${user.id}` : 'change-password';
   async function submit(e) {
     e.preventDefault(); const form=e.currentTarget; const data=new FormData(form);
-    setMessage('');setGenerated('');
+    setMessage('');setGenerated('');setVisible(false);setCopyStatus('');
     const password=data.get('new_password');
     if ((!user || mode==='custom') && password!==data.get('confirm_password')) {setMessage('New passwords do not match.');return;}
     setBusy(true);
@@ -32,6 +34,10 @@ export default function PasswordSettings({user, onClose}) {
       </div>
     </form>
     <p className="password-status" role="status">{message}</p>
-    {generated && <div className="password-result"><p>Copy this password now and share it securely. It is shown only here for this reset.</p><code className="password-generated">{generated}</code><div className="password-actions"><button type="button" className="btn btn-secondary" onClick={()=>setGenerated('')}>Hide password</button></div></div>}
+    {generated && <div className="password-result"><p>Copy this password and share it securely. It will not be available after leaving this page.</p>
+      <div className="password-actions" aria-label="Generated password actions">
+        <button type="button" className="btn btn-secondary" title="Copy password" aria-label="Copy password" onClick={async()=>{try{await navigator.clipboard.writeText(generated);setCopyStatus('Password copied.');}catch{setCopyStatus('Clipboard unavailable. Reveal the password and copy it manually.');}}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/></svg></button>
+        <button type="button" className="btn btn-secondary" title={visible?'Hide password':'Show password'} aria-label={visible?'Hide password':'Show password'} aria-pressed={visible} onClick={()=>setVisible(v=>!v)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>{!visible&&<path d="m3 3 18 18"/>}</svg></button>
+      </div><code className="password-generated" aria-label={visible?'Generated password':'Password hidden'}>{visible?generated:'••••••••••••••••••••••••'}</code><p role="status">{copyStatus}</p></div>}
   </section>;
 }
