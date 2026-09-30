@@ -81,6 +81,8 @@ export const api = {
   attachmentUrl: (attachmentId) => `${BASE}/attachments/${attachmentId}`,
 
   // admin
+  getManagedUser: (id) => request(`/admin/users/${id}`),
+  setManagedEmail: (id, body) => request(`/admin/users/${id}/email`, {method:"PUT",body:JSON.stringify(body)}),
   listUsers: () => request("/admin/users"),
   createUser: (username, password, isAdmin, email = "", sendInvite = false) =>
     request("/admin/users", { method: "POST", body: JSON.stringify({ username, password, is_admin: isAdmin, email, send_invite: sendInvite }) }),

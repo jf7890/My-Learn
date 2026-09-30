@@ -1,3 +1,4 @@
+import UserManagement from "./components/UserManagement.jsx";
 import AccountSettings from "./components/AccountSettings.jsx";
 import LearningMood from "./components/LearningMood.jsx";
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router-dom";
@@ -11,7 +12,7 @@ import AdminDashboard from "./components/AdminDashboard.jsx";
 import Profile from "./components/Profile.jsx";
 import { api, getToken } from "./api";
 import { useBranding } from "./BrandingContext.jsx";
-import { BrandMark, IconShield, IconLogOut, IconUsers, IconLibrary } from "./icons.jsx";
+import { BrandMark, IconSettings, IconShield, IconLogOut, IconUsers, IconLibrary } from "./icons.jsx";
 
 function RequireAuth({ children }) {
   if (!getToken()) return <Navigate to="/login" replace />;
@@ -55,7 +56,7 @@ function TopNav() {
       <Link to="/profile" className={`btn btn-secondary btn-sm ${location.pathname === "/profile" ? "ct-nav-active" : ""}`}>
         <IconUsers width={14} height={14} /> My profile
       </Link>
-      <Link to="/settings" className={`btn btn-secondary btn-sm ${location.pathname === "/settings" ? "ct-nav-active" : ""}`}>Settings</Link>
+      <Link to="/settings" className={`btn btn-secondary btn-sm ${location.pathname === "/settings" ? "ct-nav-active" : ""}`}><IconSettings width={16} height={16} /> Settings</Link>
       {user?.is_admin && (
         <Link to="/admin" className={`btn btn-secondary btn-sm ${location.pathname === "/admin" ? "ct-nav-active" : ""}`}>
           <IconShield width={14} height={14} /> Admin
@@ -138,6 +139,7 @@ export default function App() {
           </RequireAuth>
         }
       />
+      <Route path="/admin/users/:userId" element={<RequireAdmin><div className="ct-app-shell"><TopNav /><main id="main-content" className="ct-app-body"><UserManagement /></main></div></RequireAdmin>} />
       <Route path="/settings" element={<RequireAuth><div className="ct-app-shell"><TopNav /><main id="main-content" className="ct-app-body"><AccountSettings /></main></div></RequireAuth>} />
       <Route
         path="/admin"

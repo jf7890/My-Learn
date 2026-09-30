@@ -162,7 +162,7 @@ function MembersPanel() {
             {users.map((u) => (
               <tr key={u.id}>
                 <td>
-                  {u.username}
+                  <Link to={`/admin/users/${u.id}`}>{u.username}</Link>
                   {u.pending_invite && <span className="badge badge-neutral ct-invite-badge">Pending invite</span>}
                 </td>
                 <td>
@@ -172,10 +172,7 @@ function MembersPanel() {
                 </td>
                 <td className="ct-muted-cell">{u.jellyfin_user_id ? "Jellyfin" : "Local"}</td>
                 <td className="ct-muted-cell">{formatLastLogin(u.last_login_at)}</td>
-                <td className="ct-table-actions">
-                  <button className="btn btn-secondary btn-sm" onClick={() => setResetUser(u)}>{String(u.id) === String(JSON.parse(localStorage.getItem("ct_user") || "null")?.id) ? "Change my password" : "Reset password"}</button>
-                  {!u.is_admin && <button className="btn btn-secondary btn-sm" onClick={() => setAccessUser(u)}>Course access</button>}
-                  <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>Remove</button>
+                <td className="ct-table-actions"><Link className="btn btn-secondary btn-sm" to={`/admin/users/${u.id}`}>Manage user</Link>
                 </td>
               </tr>
             ))}
@@ -262,7 +259,7 @@ function MembersPanel() {
   );
 }
 
-function CourseAccessEditor({ user, onClose }) {
+export function CourseAccessEditor({ user, onClose }) {
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [error, setError] = useState("");

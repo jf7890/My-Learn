@@ -16,6 +16,7 @@ import notifications
 from auth import hash_password, require_admin
 from db import get_conn, get_setting, row_to_dict, set_setting
 from scanner import scan_all
+from schemas import AdminEmailUpdate
 from schemas import (CourseAccessUpdate, CourseUpdate, CreateMemberRequest, EmailSettingsUpdate,
                      EmailTestRequest, NotificationSettingsUpdate, ResetPasswordRequest,
                      SettingsUpdate, TestJellyfinRequest)
@@ -438,3 +439,38 @@ def rescan(current=Depends(require_admin)):
             "username": current.get("username", ""),
         })
     return summary
+
+
+@router.get("/admin/users/{user_id}")
+def managed_user(user_id: int, current=Depends(require_admin)):
+    from routers.progress import my_stats
+    with get_conn() as conn:
+        row = conn.execute("SELECT id,username,email,is_admin,jellyfin_user_id,created_at,last_login_at FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "User not found")
+        user = dict(row)
+    return {"user": user, "stats": my_stats({"sub": str(user_id), "is_admin": bool(user['is_admin'])})}
+
+@router.put("/admin/users/{user_id}/email")
+def managed_email(user_id: int, body: AdminEmailUpdate, current=Depends(require_admin)):
+    import re
+    import rate_limit
+    key = f"admin-email:{current['sub']}"
+    rate_limit.check_rate_limit(key)
+    email = body.email.strip().lower()
+    if len(email)>254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+        raise HTTPException(400, "Enter a valid email address")
+    with get_conn() as conn:
+        actor = conn.execute("SELECT password_hash FROM users WHERE id=?", (current['sub'],)).fetchone()
+        if len(body.admin_password.encode())>72 or not actor or not auth.verify_password(body.admin_password, actor['password_hash']):
+            rate_limit.record_failure(key)
+            raise HTTPException(400, "Admin password is incorrect")
+        if not conn.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone():
+            raise HTTPException(404, "User not found")
+        try:
+            conn.execute("UPDATE users SET email=? WHERE id=?", (email,user_id))
+        except sqlite3.IntegrityError:
+            raise HTTPException(409, "Email is already assigned")
+        conn.execute("UPDATE auth_tokens SET used=1 WHERE user_id=?", (user_id,))
+    rate_limit.record_success(key)
+    return {"ok": True}
