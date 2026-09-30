@@ -52,7 +52,7 @@ function TopNav() {
       <Link to="/" className={`btn btn-secondary btn-sm ${location.pathname === "/" ? "ct-nav-active" : ""}`}><IconLibrary width={18} height={18} /> Library</Link>
       <div className="ct-spacer" />
       <Link to="/profile" className={`btn btn-secondary btn-sm ${location.pathname === "/profile" ? "ct-nav-active" : ""}`}>
-        <IconUsers width={14} height={14} /> My progress
+        <IconUsers width={14} height={14} /> My profile
       </Link>
       {user?.is_admin && (
         <Link to="/admin" className={`btn btn-secondary btn-sm ${location.pathname === "/admin" ? "ct-nav-active" : ""}`}>

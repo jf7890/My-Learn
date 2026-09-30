@@ -173,7 +173,7 @@ function MembersPanel() {
                 <td className="ct-muted-cell">{u.jellyfin_user_id ? "Jellyfin" : "Local"}</td>
                 <td className="ct-muted-cell">{formatLastLogin(u.last_login_at)}</td>
                 <td className="ct-table-actions">
-                  <button className="btn btn-secondary btn-sm" onClick={() => setResetUser(u)}>Reset password</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setResetUser(u)}>{String(u.id) === String(JSON.parse(localStorage.getItem("ct_user") || "null")?.id) ? "Change my password" : "Reset password"}</button>
                   {!u.is_admin && <button className="btn btn-secondary btn-sm" onClick={() => setAccessUser(u)}>Course access</button>}
                   <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>Remove</button>
                 </td>
@@ -183,7 +183,7 @@ function MembersPanel() {
         </table>
       </div>
 
-      {resetUser && <PasswordSettings user={resetUser} onClose={() => setResetUser(null)} />}
+      {resetUser && <PasswordSettings user={String(resetUser.id) === String(JSON.parse(localStorage.getItem("ct_user") || "null")?.id) ? undefined : resetUser} onClose={() => setResetUser(null)} />}
       {accessUser && <CourseAccessEditor user={accessUser} onClose={() => setAccessUser(null)} />}
 
       {!showCreate ? (
