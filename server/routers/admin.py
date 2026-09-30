@@ -443,13 +443,13 @@ def rescan(current=Depends(require_admin)):
 
 @router.get("/admin/users/{user_id}")
 def managed_user(user_id: int, current=Depends(require_admin)):
-    from routers.progress import my_stats
+    from services.learning_stats import get_learning_stats
     with get_conn() as conn:
         row = conn.execute("SELECT id,username,email,is_admin,jellyfin_user_id,created_at,last_login_at FROM users WHERE id=?", (user_id,)).fetchone()
         if not row:
             raise HTTPException(404, "User not found")
         user = dict(row)
-    return {"user": user, "stats": my_stats({"sub": str(user_id), "is_admin": bool(user['is_admin'])})}
+    return {"user": user, "stats": get_learning_stats(user_id, bool(user["is_admin"]))}
 
 @router.put("/admin/users/{user_id}/email")
 def managed_email(user_id: int, body: AdminEmailUpdate, current=Depends(require_admin)):

@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
 import {api} from '../api';
 import PasswordSettings from './PasswordSettings.jsx';
-import {CourseAccessEditor} from './AdminDashboard.jsx';
+import CourseAccessEditor from './CourseAccessEditor.jsx';
 export default function UserManagement(){
  const {userId}=useParams();const [params,setParams]=useSearchParams();const tab=params.get('section')||'overview';
  const [data,setData]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
