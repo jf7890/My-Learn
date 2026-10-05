@@ -102,14 +102,16 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
     setMediaUrl("");
     setMediaError("");
     ticketRecoveryTriedRef.current = false;
-    renewPlaybackTicket();
+    renewPlaybackTicket({ resumeAt: lesson.position_seconds || 0 });
   }, [lesson.id, renewPlaybackTicket]);
 
   // Resume from stored position when lesson changes
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    setNextPrompt(false); setBuffering(false); setPreloadMode("metadata"); setBufferedEnd(0); setMediaError("");
+    setCurrent(lesson.position_seconds || 0);
+    setDuration(lesson.duration_seconds || 0);
+    setNextPrompt(false); setBuffering(true); setPreloadMode("metadata"); setBufferedEnd(0); setMediaError("");
     durationReportedRef.current = false;
     autoCompletedRef.current = false;
     const resumeAt = lesson.position_seconds || 0;
@@ -126,7 +128,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
   useEffect(() => {
     saveIntervalRef.current = setInterval(() => {
       const v = videoRef.current;
-      if (v && !v.paused && v.currentTime > 0) {
+      if (v && !pendingResumeRef.current && !v.paused && v.currentTime > 0) {
         onProgress?.(lesson.id, v.currentTime, false);
       }
     }, 5000);
@@ -135,7 +137,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
 
   const handleTimeUpdate = () => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || pendingResumeRef.current) return;
     setCurrent(v.currentTime);
     if (v.duration && v.currentTime > v.duration - 8 && !nextPrompt && nextLesson) {
       setNextPrompt(true);
@@ -155,7 +157,8 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
     if (!v || !pending) return;
     if (pending.resumeAt > 0 && pending.resumeAt < v.duration) v.currentTime = pending.resumeAt;
     v.playbackRate = speed;
-    pendingResumeRef.current = null;
+    // Keep the displayed position pinned until the restored seek completes.
+    if (!v.seeking) pendingResumeRef.current = null;
     ticketRecoveryTriedRef.current = false;
     if (pending.autoplay) v.play().catch(() => {});
   };
@@ -173,7 +176,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
 
   const handleDurationChange = (e) => {
     const d = e.target.duration;
-    setDuration(d);
+    if (Number.isFinite(d) && d > 0) setDuration(d);
     if (d && isFinite(d) && !durationReportedRef.current && !lesson.duration_seconds) {
       durationReportedRef.current = true;
       api.reportDuration(lesson.id, d).catch(() => {});
@@ -276,11 +279,12 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
         ref={videoRef}
         src={mediaUrl || undefined}
         preload={preloadMode}
-        onPlay={() => { setPlaying(true); setBuffering(false); setPreloadMode("auto"); }}
+        onPlay={() => { setPlaying(true); setPreloadMode("auto"); }}
         onPlaying={() => { setPlaying(true); setBuffering(false); setMediaError(""); }}
         onWaiting={() => setBuffering(true)}
         onStalled={() => setBuffering(true)}
-        onCanPlay={() => setBuffering(false)}
+        onCanPlay={() => { if (!pendingResumeRef.current) setBuffering(false); }}
+        onSeeked={() => { pendingResumeRef.current = null; if (videoRef.current) setCurrent(videoRef.current.currentTime); if (videoRef.current?.readyState >= 3) setBuffering(false); }}
         onProgress={updateBuffered}
         onError={handleMediaError}
         onPause={() => setPlaying(false)}
@@ -305,7 +309,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
       </video>
 
       {(buffering || mediaError) && <div className="ct-buffer-state" role="status">
-        {buffering && !mediaError && <><span className="spinner" /> Buffering…</>}
+        {buffering && !mediaError && <div className="ct-loading-card"><span className="ct-loading-ring" aria-hidden="true" /><span>Đang tải video<span className="ct-loading-caption">Vị trí xem của bạn được giữ nguyên</span></span></div>}
         {mediaError && <><span>{mediaError}</span><button className="btn btn-primary btn-sm" onClick={() => { const v=videoRef.current; ticketRecoveryTriedRef.current=false; renewPlaybackTicket({ resumeAt: v?.currentTime || current, autoplay: true }); }}>Retry</button></>}
       </div>}
 
@@ -402,7 +406,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
           display: block;
           object-fit: contain;
         }
-        .ct-buffer-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;font-size:14px;pointer-events:none}.ct-buffer-state .btn{pointer-events:auto}.ct-buffer-state .spinner{width:22px;height:22px}
+        .ct-buffer-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;font-size:14px;pointer-events:none}.ct-buffer-state .btn{pointer-events:auto}.ct-loading-card{display:flex;align-items:center;gap:14px;padding:18px 22px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(25,35,49,.82);box-shadow:0 8px 32px rgba(0,0,0,.18);backdrop-filter:blur(12px)}.ct-loading-caption{display:block;margin-top:5px;color:#cbd5e1;font-size:12px}.ct-loading-ring{width:28px;height:28px;border:3px solid rgba(186,218,255,.2);border-top-color:#badcff;border-radius:50%;animation:ct-loading-spin .85s linear infinite;flex-shrink:0}@keyframes ct-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.ct-loading-ring{animation:none;border-color:#badcff}}
         .ct-next-card {
           position: absolute;
           right: 16px;
