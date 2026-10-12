@@ -309,7 +309,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
       </video>
 
       {(buffering || mediaError) && <div className="ct-buffer-state" role="status">
-        {buffering && !mediaError && <div className="ct-loading-card"><span className="ct-loading-ring" aria-hidden="true" /><span>Đang tải video<span className="ct-loading-caption">Vị trí xem của bạn được giữ nguyên</span></span></div>}
+        {buffering && !mediaError && <span className="ct-loading-ring" role="status" aria-label="Đang tải video" />}
         {mediaError && <><span>{mediaError}</span><button className="btn btn-primary btn-sm" onClick={() => { const v=videoRef.current; ticketRecoveryTriedRef.current=false; renewPlaybackTicket({ resumeAt: v?.currentTime || current, autoplay: true }); }}>Retry</button></>}
       </div>}
 
@@ -406,7 +406,7 @@ export default function VideoPlayer({ lesson, lessons, onNext, onProgress }) {
           display: block;
           object-fit: contain;
         }
-        .ct-buffer-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;font-size:14px;pointer-events:none}.ct-buffer-state .btn{pointer-events:auto}.ct-loading-card{display:flex;align-items:center;gap:14px;padding:18px 22px;border:1px solid rgba(255,255,255,.16);border-radius:18px;background:rgba(25,35,49,.82);box-shadow:0 8px 32px rgba(0,0,0,.18);backdrop-filter:blur(12px)}.ct-loading-caption{display:block;margin-top:5px;color:#cbd5e1;font-size:12px}.ct-loading-ring{width:28px;height:28px;border:3px solid rgba(186,218,255,.2);border-top-color:#badcff;border-radius:50%;animation:ct-loading-spin .85s linear infinite;flex-shrink:0}@keyframes ct-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.ct-loading-ring{animation:none;border-color:#badcff}}
+        .ct-buffer-state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(0,0,0,.35);color:#fff;font-size:14px;pointer-events:none}.ct-buffer-state .btn{pointer-events:auto}.ct-loading-ring{width:28px;height:28px;border:3px solid rgba(186,218,255,.2);border-top-color:#badcff;border-radius:50%;animation:ct-loading-spin .85s linear infinite;flex-shrink:0}@keyframes ct-loading-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.ct-loading-ring{animation:none;border-color:#badcff}}
         .ct-next-card {
           position: absolute;
           right: 16px;
