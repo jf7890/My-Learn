@@ -16,9 +16,18 @@ from schemas import ChangePasswordRequest, ForgotPasswordRequest, LoginRequest, 
 router = APIRouter()
 SESSION_COOKIE = "session_token"
 
-def auth_response(response: Response, user: dict):
+
+def cookie_secure(request: Request) -> bool:
+    """SESSION_COOKIE_SECURE: true (default), false, or auto (Secure only for HTTPS requests)."""
+    mode = os.environ.get("SESSION_COOKIE_SECURE", "true").strip().lower()
+    if mode == "auto":
+        proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").split(",")[0].strip().lower()
+        return proto == "https"
+    return mode not in {"0", "false", "no"}
+
+def auth_response(request: Request, response: Response, user: dict):
     token = issue_token(user)
-    secure = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() not in {"0", "false", "no"}
+    secure = cookie_secure(request)
     response.set_cookie(SESSION_COOKIE, token, max_age=auth.JWT_TTL_SECONDS, httponly=True,
                         secure=secure, samesite="lax", path="/")
     return {"user": {"id": user["id"], "username": user["username"], "is_admin": bool(user["is_admin"])}}
@@ -87,7 +96,7 @@ def setup(body: SetupRequest, request: Request, response: Response):
         cursor = conn.execute("INSERT INTO users(username,password_hash,is_admin) VALUES(?,?,1)", (username, hash_password(body.password)))
         user = row_to_dict(conn.execute("SELECT * FROM users WHERE id=?", (cursor.lastrowid,)).fetchone())
     rate_limit.record_success(key)
-    return auth_response(response, user)
+    return auth_response(request, response, user)
 
 
 @router.post("/auth/login")
@@ -103,7 +112,7 @@ def login(body: LoginRequest, request: Request, response: Response):
         raise HTTPException(status_code=401, detail=str(error))
     record_login_success(keys)
     log_login_attempt(user["id"], user["username"], ip, True, "local")
-    return auth_response(response, user)
+    return auth_response(request, response, user)
 
 
 @router.post("/auth/jellyfin/login")
@@ -122,12 +131,12 @@ def jellyfin_login(body: LoginRequest, request: Request, response: Response):
     user = get_or_create_jellyfin_linked_user(jellyfin_user)
     record_login_success(keys)
     log_login_attempt(user["id"], user["username"], ip, True, "jellyfin")
-    return auth_response(response, user)
+    return auth_response(request, response, user)
 
 
 @router.post("/auth/logout", status_code=204)
-def logout(response: Response):
-    secure = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() not in {"0", "false", "no"}
+def logout(request: Request, response: Response):
+    secure = cookie_secure(request)
     response.delete_cookie(SESSION_COOKIE, path="/", httponly=True, secure=secure, samesite="lax")
 
 @router.post("/auth/forgot-password")
@@ -164,7 +173,7 @@ def check_auth_token(token: str):
 
 
 @router.post("/auth/token/{token}")
-def set_password_via_token(token: str, body: SetPasswordRequest, response: Response):
+def set_password_via_token(token: str, body: SetPasswordRequest, request: Request, response: Response):
     if len(body.password) < 8 or len(body.password) > 1024:
         raise HTTPException(status_code=400, detail="Password must be between 8 and 1024 characters")
     with get_conn() as conn:
@@ -174,7 +183,7 @@ def set_password_via_token(token: str, body: SetPasswordRequest, response: Respo
         conn.execute("UPDATE users SET password_hash=? WHERE id=?", (hash_password(body.password), resolved["user_id"]))
         auth.consume_auth_token(conn, token)
         user = conn.execute("SELECT id,username,is_admin FROM users WHERE id=?", (resolved["user_id"],)).fetchone()
-    return auth_response(response, dict(user))
+    return auth_response(request, response, dict(user))
 
 
 @router.post("/auth/change-password")
