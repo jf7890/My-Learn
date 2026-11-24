@@ -3,6 +3,7 @@
 import mimetypes
 import os
 import re
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
@@ -25,6 +26,29 @@ def range_not_satisfiable(file_size: int):
 
 def srt_to_vtt(srt_text: str) -> str:
     return "WEBVTT\n\n" + SRT_TIMESTAMP_RE.sub(r"\1.\2", srt_text).strip() + "\n"
+
+
+def request_is_https(request: Request) -> bool:
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").split(",")[0]
+    return proto.strip().lower() == "https"
+
+
+def is_player_request(request: Request) -> bool:
+    """Accept only <video> element requests from this site.
+
+    Browsers send Sec-Fetch-* only in secure contexts (HTTPS/localhost). Over a
+    plain-HTTP LAN address they are absent, so fall back to a same-host Referer.
+    """
+    fetch_dest = request.headers.get("sec-fetch-dest", "").lower()
+    fetch_site = request.headers.get("sec-fetch-site", "").lower()
+    if fetch_dest or fetch_site:
+        return fetch_dest == "video" and fetch_site in {"same-origin", "same-site"}
+    if request_is_https(request):
+        return False
+    referer = urlsplit(request.headers.get("referer", ""))
+    # nginx forwards $host (no port), so compare hostnames only.
+    host = urlsplit("//" + request.headers.get("host", "")).hostname or ""
+    return bool(host) and referer.scheme == "http" and (referer.hostname or "") == host
 
 
 @router.get("/media/{lesson_id}")
@@ -71,9 +95,7 @@ def stream_media(
     # Modern browsers identify requests made by a <video> element. Opening the
     # ticket in a tab changes the destination to "document"; downloads use a
     # non-video destination. Reject both while preserving native Range/seek.
-    fetch_dest = request.headers.get("sec-fetch-dest", "").lower()
-    fetch_site = request.headers.get("sec-fetch-site", "").lower()
-    if fetch_dest != "video" or fetch_site not in {"same-origin", "same-site"}:
+    if not is_player_request(request):
         raise HTTPException(status_code=403, detail="Playback URL is only valid inside the course player")
     record = validate_playback_ticket(ticket, current["sub"], session_token)
     if not record:
