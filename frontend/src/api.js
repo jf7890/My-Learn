@@ -56,6 +56,14 @@ export const api = {
   getCourse: (id) => request(`/courses/${id}`),
   getContinueWatching: () => request("/continue-watching"),
   getMyStats: () => request("/me/stats"),
+  getKnowledgeQuestions: (courseId, sectionId) => {
+    const p = sectionId ? "/knowledge/courses/" + courseId + "/sections/" + sectionId + "/questions" : "/knowledge/courses/" + courseId + "/questions";
+    return request(p);
+  },
+  submitKnowledgeQuiz: (payload) =>
+    request("/knowledge/submit", { method: "POST", body: JSON.stringify(payload) }),
+  getKnowledgeHistory: (courseId) =>
+    request("/knowledge/courses/" + courseId + "/history"),
   getNote: (lessonId) => request(`/lessons/${lessonId}/note`),
   saveNote: (lessonId, contentHtml) => request(`/lessons/${lessonId}/note`, { method: "PUT", body: JSON.stringify({ content_html: contentHtml }) }),
   uploadNoteImage: (lessonId, file) => {

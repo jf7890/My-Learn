@@ -45,6 +45,7 @@ from routers.auth_routes import router as auth_router
 from routers.branding import router as branding_router
 from routers.courses import router as courses_router
 from routers.admin import router as admin_router
+from routers.knowledge import router as knowledge_router
 from services.ranges import RANGE_WINDOW_BYTES, parse_single_range
 from schemas import (
     DurationUpdate,
@@ -59,7 +60,16 @@ from schemas import (
     CourseUpdate
 )
 
-app = FastAPI(title="uLearn API")
+# Interactive docs and the OpenAPI schema expose the full attack surface, so
+# they are disabled unless ENABLE_API_DOCS=true is set explicitly (dev only).
+API_DOCS_ENABLED = os.environ.get("ENABLE_API_DOCS", "false").strip().lower() == "true"
+
+app = FastAPI(
+    title="uLearn API",
+    docs_url="/docs" if API_DOCS_ENABLED else None,
+    redoc_url="/redoc" if API_DOCS_ENABLED else None,
+    openapi_url="/openapi.json" if API_DOCS_ENABLED else None,
+)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -80,6 +90,7 @@ app.include_router(auth_router)
 app.include_router(branding_router)
 app.include_router(courses_router)
 app.include_router(admin_router)
+app.include_router(knowledge_router)
 
 # Compatibility alias retained for existing helper tests and callers.
 _parse_single_range = parse_single_range

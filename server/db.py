@@ -16,6 +16,7 @@ Schema:
 import os
 import sqlite3
 from contextlib import contextmanager
+from services.knowledge_service import init_quiz_tables
 
 DB_PATH = os.environ.get("ULEARN_DB", "/data/ulearn.db")
 
@@ -206,6 +207,7 @@ def init_db():
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='course_access'"
     ).fetchone() is not None
     conn.executescript(SCHEMA)
+    init_quiz_tables(conn)
     # Prior completions are ineligible for new streak credit; their original dates are unknown.
     conn.execute("INSERT OR IGNORE INTO first_video_completions(user_id,lesson_id,day) SELECT p.user_id,p.lesson_id,NULL FROM progress p JOIN lessons l ON l.id=p.lesson_id WHERE p.completed=1 AND l.media_type='video'")
     _migrate(conn)

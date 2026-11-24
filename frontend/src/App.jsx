@@ -10,9 +10,10 @@ import CourseGrid from "./components/CourseGrid.jsx";
 import CourseView from "./components/CourseView.jsx";
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import Profile from "./components/Profile.jsx";
+import KnowledgeCheck from "./components/KnowledgeCheck.jsx";
 import { api, getToken } from "./api";
 import { useBranding } from "./BrandingContext.jsx";
-import { BrandMark, IconSettings, IconShield, IconLogOut, IconUsers, IconLibrary } from "./icons.jsx";
+import { BrandMark, IconSettings, IconShield, IconLogOut, IconUsers, IconLibrary, IconAward } from "./icons.jsx";
 
 function RequireAuth({ children }) {
   if (!getToken()) return <Navigate to="/login" replace />;
@@ -51,7 +52,8 @@ function TopNav() {
         <span className="sl-brand-name">{site_name || "Self Learn"}<small>Your learning workspace</small></span>
       </Link>
       <LearningMood /><span className="sl-nav-label">WORKSPACE</span>
-      <Link to="/" className={`btn btn-secondary btn-sm ${location.pathname === "/" ? "ct-nav-active" : ""}`}><IconLibrary width={18} height={18} /> Library</Link>
+            <Link to="/" className={`btn btn-secondary btn-sm ${location.pathname === "/" ? "ct-nav-active" : ""}`}><IconLibrary width={18} height={18} /> Library</Link>
+      <Link to="/knowledge-check" className={`btn btn-secondary btn-sm ${location.pathname === "/knowledge-check" ? "ct-nav-active" : ""}`}><IconAward width={16} height={16} /> Knowledge Check</Link>
       <div className="ct-spacer" />
       <Link to="/profile" className={`btn btn-secondary btn-sm ${location.pathname === "/profile" ? "ct-nav-active" : ""}`}>
         <IconUsers width={14} height={14} /> My profile
@@ -109,6 +111,17 @@ export default function App() {
       <Route path="/setup" element={<Setup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/set-password/:token" element={<SetPassword />} />
+      <Route
+        path="/knowledge-check"
+        element={
+          <RequireAuth>
+            <div className="ct-app-shell">
+              <TopNav />
+              <main id="main-content" tabIndex={-1} className="ct-app-body"><KnowledgeCheck /></main>
+            </div>
+          </RequireAuth>
+        }
+      />
       <Route
         path="/"
         element={
